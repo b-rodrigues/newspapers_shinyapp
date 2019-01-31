@@ -1,0 +1,121 @@
+---
+title: "Exploring 10 years of daily publications of the Luxembourguish newspaper, *L'Union*"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: yeti
+    orientation: columns
+    vertical_layout: fill
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(shiny)
+library(tidyverse)
+library(textrank)
+library(tidytext)
+library(udpipe)
+library(plotly)
+library(brotools)
+```
+
+Sidebar {.sidebar}
+=====================================
+
+```{r}
+dateInput('date2',
+      label = paste('Select date'),
+      value = as.character(as.Date("1860-11-14")),
+      min = as.Date("1860-11-12"), max = as.Date("1869-12-31"),
+      format = "yyyy/mm/dd",
+      startview = 'year', language = 'en-GB', weekstart = 1
+    )
+
+selectInput(inputId = "tf_df_words", 
+            label = "Select number of unique words for tf-idf", 
+            choices = seq(1:10),
+            selected = 5)
+
+selectInput(inputId = "textrank_n_sentences", 
+            label = "Select the number of sentences for the summary of the article", 
+            choices = seq(1:20), 
+            selected = 5)
+```
+
+*The BnL has digitised over 800.000 pages of Luxembourg newspapers. From those, more than 700.000 
+pages have rich metadata using international XML standards such as METS and ALTO. 
+Multiple datasets are available for download. Each one is of different size and contains different
+newspapers. All the digitised material can also be found on our search platform a-z.lu 
+(Make sure to filter by “eluxemburgensia”). All datasets contain XML (METS + ALTO), PDF, original 
+TIFF and PNG files for every newspaper issue.* 
+Source: https://data.bnl.lu/data/historical-newspapers/
+
+This Shiny app allows you to get summaries of the 10 years of daily issues of the "L'Union" newspaper.
+In the first tab, a simple word frequency per article is shown, using the tf-idf method. In the 
+second tab, summary sentences have been extracted using the `{textrank}` package.
+
+
+Word frequency per article
+===================================== 
+Row
+-----------------------------------------------------------------------
+
+### Note: there might be days without any publication. In case of an error, select another date.
+    
+```{r}
+path_tf_idf <- reactive({
+    paste0("tf_idf_data/newspaper_lunion_", as.character(input$date2), "_tf_idf_data.rds")
+})
+
+dfInput <- reactive({
+        readRDS(path_tf_idf()) %>%
+        top_n(as.numeric(input$tf_df_words), tf_idf) %>%
+        mutate(word = reorder(lemma, tf_idf)) 
+})
+
+renderPlotly({
+    df_tf_idf <- dfInput()
+
+    p1 <- ggplot(df_tf_idf,
+                 aes(word, tf_idf)) +
+                 geom_col(show.legend = FALSE, fill = "#82518c") +
+                 labs(x = NULL, y = "tf-doc_idf") +
+                 facet_wrap(~doc_id, ncol = 2, scales = "free") +
+                 coord_flip() +
+                 theme_blog()
+
+    ggplotly(p1)
+})
+```
+
+Summary of articles {data-orientation=rows}
+===================================== 
+Row 
+-----------------------------------------------------------------------
+
+### The sentence in bold is the title of the article. You can show more sentences in the summary by using the input in the sidebar.
+    
+```{r}
+
+print_summary_textrank <- function(doc_id, summary, n_sentences){
+    htmltools::HTML(paste0("<b>", doc_id, "</b>"), paste("<p>", summary(summary, n_sentences), sep = "", collapse = "<br/>"), "</p>")
+}
+
+path_textrank <- reactive({
+    paste0("textrank_data/newspaper_lunion_", as.character(input$date2), "_textrank_data.rds")
+})
+
+dfInput2 <- reactive({
+        readRDS(path_textrank())
+})
+
+renderUI({
+    df_textrank <- dfInput2()
+
+    
+df_textrank <- df_textrank %>% 
+    mutate(to_print = map2(doc_id, summary, print_summary_textrank, n_sentences = as.numeric(input$textrank_n_sentences)))
+
+df_textrank$to_print
+})
+```
