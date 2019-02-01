@@ -1,0 +1,12 @@
+name: exploring_historical_newspaper
+title: exploring_historical_newspaper
+username:
+account: brodriguesco
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 680392
+bundleId: 1848980
+url: https://brodriguesco.shinyapps.io/exploring_historical_newspaper/
+when: 1548968599.61011
+asMultiple: FALSE
+asStatic: FALSE

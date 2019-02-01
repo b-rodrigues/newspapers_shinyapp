@@ -16,7 +16,7 @@ library(textrank)
 library(tidytext)
 library(udpipe)
 library(plotly)
-library(brotools)
+library(ggthemes)
 ```
 
 Sidebar {.sidebar}
@@ -64,11 +64,11 @@ Row
     
 ```{r}
 path_tf_idf <- reactive({
-    paste0("tf_idf_data/newspaper_lunion_", as.character(input$date2), "_tf_idf_data.rds")
+    paste0("https://raw.githubusercontent.com/b-rodrigues/newspapers_shinyapp/master/tf_idf_data/newspaper_lunion_", as.character(input$date2), "_tf_idf_data.rds")
 })
 
 dfInput <- reactive({
-        readRDS(path_tf_idf()) %>%
+        read_rds(url(path_tf_idf())) %>%
         top_n(as.numeric(input$tf_df_words), tf_idf) %>%
         mutate(word = reorder(lemma, tf_idf)) 
 })
@@ -82,7 +82,7 @@ renderPlotly({
                  labs(x = NULL, y = "tf-doc_idf") +
                  facet_wrap(~doc_id, ncol = 2, scales = "free") +
                  coord_flip() +
-                 theme_blog()
+                 theme_dark()
 
     ggplotly(p1)
 })
@@ -102,11 +102,11 @@ print_summary_textrank <- function(doc_id, summary, n_sentences){
 }
 
 path_textrank <- reactive({
-    paste0("textrank_data/newspaper_lunion_", as.character(input$date2), "_textrank_data.rds")
+    paste0("https://raw.githubusercontent.com/b-rodrigues/newspapers_shinyapp/master/textrank_data/newspaper_lunion_", as.character(input$date2), "_textrank_data.rds")
 })
 
 dfInput2 <- reactive({
-        readRDS(path_textrank())
+        read_rds(url(path_textrank()))
 })
 
 renderUI({

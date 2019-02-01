@@ -1,0 +1,12 @@
+name: newspapers_app
+title: newspapers_app
+username:
+account: brodriguesco
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 680420
+bundleId: 1848992
+url: https://brodriguesco.shinyapps.io/newspapers_app/
+when: 1548968931.04058
+asMultiple: FALSE
+asStatic: FALSE
